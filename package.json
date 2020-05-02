@@ -1,0 +1,25 @@
+{
+  "name": "api1",
+  "version": "1.0.0",
+  "description": "restful api",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/boluakins/api1.git"
+  },
+  "keywords": [
+    "api"
+  ],
+  "author": "Bolu Akinsola",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/boluakins/api1/issues"
+  },
+  "homepage": "https://github.com/boluakins/api1#readme",
+  "dependencies": {
+    "express": "^4.17.1"
+  }
+}
