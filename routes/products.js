@@ -1,6 +1,16 @@
 const express = require('express')
-router = express.Router();
+const router = express.Router();
 const Product = require('../models/Product');
+const multer = require('multer')
+const storage = multer.diskStorage({
+    destination: function(req, file, cb){
+        cb(null, './uploads/')
+    },
+    filename: function (req, file, cb) {
+        cb(null, new Date().toISOString() + file.originalname)
+    }
+})
+const upload = multer({storage: storage})
 
 router.get('/', async (req, res) => {
     try {
@@ -25,7 +35,8 @@ router.get('/', async (req, res) => {
     }
 })
 
-router.post('/', async (req, res) => {
+router.post('/', upload.single('productImage'), async (req, res) => {
+    console.log(req.file);
     
     const product = new Product({
         name: req.body.name,
@@ -54,6 +65,11 @@ router.post('/', async (req, res) => {
 router.get('/:productId', async (req, res) => {
    try {
        const product =  await Product.findById(req.params.productId);
+       if (!product) {
+            return res.json({
+                    message: 'product not found'
+                })
+        } 
        const response = {
                 id: product._id,
                 name: product.name,
