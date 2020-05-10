@@ -11,11 +11,14 @@ app.use(cors())
 app.use(bodyParser.urlencoded({extended: false}))
 app.use(bodyParser.json());
 
+const usersRoute = require('./routes/users');
 const postsRoute = require('./routes/posts');
 const productsRoute = require('./routes/products');
 const ordersRoute = require('./routes/orders');
 
 app.use(morgan('dev'));
+
+app.use('/users', usersRoute);
 app.use('/posts', postsRoute);
 app.use('/products', productsRoute);
 app.use('/orders', ordersRoute);
