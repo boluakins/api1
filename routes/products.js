@@ -11,6 +11,7 @@ const storage = multer.diskStorage({
     }
 })
 const upload = multer({storage: storage})
+//upload feature not working yet
 
 router.get('/', async (req, res) => {
     try {
