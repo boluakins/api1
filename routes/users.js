@@ -2,6 +2,18 @@ const express = require('express')
 const router = express.Router();
 const User = require('../models/User');
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+
+router.get('/', async (req, res) => {
+    try {
+        users = await User.find().select('id email')
+        res.json(users)
+    } catch (err) {
+        res.json({
+            message: err
+        })
+    }
+});
 
 router.post('/signup', async(req, res) => {
     try {
@@ -13,13 +25,15 @@ router.post('/signup', async(req, res) => {
         }
     } catch (error) {
         return res.json({
+            message: "this error",
             error: error
         })
     }
-    bcrypt.hash(req.body.password, 10, (err, hash) => {
+    await bcrypt.hash(req.body.password, 10, (err, hash) => {
         if (err) {
             return res.json({
-                error: error
+                message: "password required",
+                error: err
             })
         } else {
             const user = new User({
@@ -28,7 +42,6 @@ router.post('/signup', async(req, res) => {
             })
             saveUser = user.save()
                 .then(result => {
-                    console.log(result);
                     res.json({
                         message: 'account created',
                     })
@@ -51,23 +64,38 @@ router.post('/login', async (req, res) => {
                 message: 'Authentication failed'
             })
         } else{
-            bcrypt.compare(req.body.password, user[0].password, (err, result) => {
+            await bcrypt.compare(req.body.password, user[0].password, (err, result) => {
                 if (err) {
+                    console.log(err);
                     return res.json({
-                        message: 'Authentication failed'
+                        message: 'Authentication failed 1'
                     })
                 }
                 if (result) {
+                    
+                    const token = jwt.sign({
+                            email: user[0].email,
+                            userId: user[0]._id
+                        }, 
+                        process.env.JWT_KEY,
+                        {
+                            expiresIn: "1h"
+                        });
+                        return res.json({
+                            message: 'Authentication successful',
+                            token: token
+                        })
+                } else{
                     return res.json({
-                        message: 'Authentication successful'
+                        message: 'Authentication failed 2'
                     })
                 }
             }
             )
         }
-    } catch (error) {
+    } catch (err) {
         return res.json({
-            error: error
+            error: err
         })
     }
 });

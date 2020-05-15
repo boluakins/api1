@@ -2,20 +2,21 @@ const express = require('express')
 const router = express.Router();
 const Product = require('../models/Product');
 const multer = require('multer')
+const checkAuth = require('../middleware/check-auth')
+
 const storage = multer.diskStorage({
     destination: function(req, file, cb){
-        cb(null, './uploads/')
+        cb(null, './uploads')
     },
     filename: function (req, file, cb) {
-        cb(null, new Date().toISOString() + file.originalname)
+        cb(null, new Date().toISOString().replace(/:/g, '-') + '-' + file.originalname)
     }
 })
 const upload = multer({storage: storage})
-//upload feature not working yet
 
 router.get('/', async (req, res) => {
     try {
-        const products = await Product.find().select('name price _id')
+        const products = await Product.find().select('name price _id productImage')
         const response = {
             count: products.length,
             products: products.map(result => {
@@ -23,6 +24,7 @@ router.get('/', async (req, res) => {
                     id: result._id,
                     name: result.name,
                     price: result.price,
+                    productImage: result.productImage,
                     request: {
                         type: 'GET',
                         url: `http://localhost:3000/products/${result.id}`
@@ -36,12 +38,11 @@ router.get('/', async (req, res) => {
     }
 })
 
-router.post('/', upload.single('productImage'), async (req, res) => {
-    console.log(req.file);
-    
+router.post('/', checkAuth, upload.single('productImage'), async (req, res) => {
     const product = new Product({
         name: req.body.name,
-        price: req.body.price
+        price: req.body.price,
+        productImage: req.file.path
     });
     try {
         const saveProduct = await product.save();
@@ -65,7 +66,7 @@ router.post('/', upload.single('productImage'), async (req, res) => {
 
 router.get('/:productId', async (req, res) => {
    try {
-       const product =  await Product.findById(req.params.productId);
+       const product =  await Product.findById(req.params.productId).select('id name price productImage');
        if (!product) {
             return res.json({
                     message: 'product not found'
@@ -75,6 +76,7 @@ router.get('/:productId', async (req, res) => {
                 id: product._id,
                 name: product.name,
                 price: product.price,
+                productImage: product.productImage,
                 request: {
                     type: 'GET',
                     url: `http://localhost:3000/products/`
@@ -90,7 +92,7 @@ router.get('/:productId', async (req, res) => {
     
 })
 
-router.delete('/:productId', async (req, res) => {
+router.delete('/:productId', checkAuth, async (req, res) => {
     try {
         const removeProduct = await Product.deleteOne({_id: req.params.productId})
         const result = {
@@ -103,7 +105,7 @@ router.delete('/:productId', async (req, res) => {
     }
 });
 
-router.patch('/:productId', async (req, res) => {
+router.patch('/:productId', checkAuth, async (req, res) => {
     try {
         const updateOp = {}
         for (const op of req.body) {
